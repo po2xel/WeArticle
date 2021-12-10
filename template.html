@@ -140,55 +140,42 @@
   </section>
 
   {% if para.subs is not none %}
-  <section style="text-align: center; width: 100%; box-sizing: border-box;">
+  <section style="text-align: center; width: 100%; box-sizing: border-box; padding-left: 32px; padding-right: 9px;">
     <section style="display: inline-block; width: 100%; height: 370px; vertical-align: top; overflow-y: auto; box-sizing: border-box;">
       <section style="overflow-x: visible; box-sizing: border-box;">
-        <section style="transform: scale(0.9); -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -o-transform: scale(0.9); transform-origin: center center; -webkit-transform-origin: center center; -moz-transform-origin: center center; -o-transform-origin: center center; margin-top: -18px; margin-bottom: -18px; box-sizing: border-box;">
-          <section style="margin-top: -80px; margin-right: 0%; margin-left: 0%; box-sizing: border-box;">
-            <section style="text-align: justify; box-sizing: border-box;">
-              {% for body in para.body %}
-              <p style="white-space: normal; box-sizing: border-box;">
-                <span style="font-size: 15px; box-sizing: border-box;">
-                  {{body}}
-                </span>
-              </p>
-              <p style="white-space: normal; box-sizing: border-box;"><br /></p>
-              {% endfor %}
+        <section style="text-align: justify; box-sizing: border-box; font-size: 85%; padding-right: 6px">
+          {% for body in para.body %}
+          <p style="white-space: normal; box-sizing: border-box;">
+            <span style="box-sizing: border-box;">
+              {{body}}
+            </span>
+          </p>
+          <p style="white-space: normal; box-sizing: border-box;"><br /></p>
+          {% endfor %}
 
-              {% for lead in para.subs.leads %}
-              <p style="white-space: normal; box-sizing: border-box;">
-                <strong style="box-sizing: border-box;">
-                  <span style="color: rgb(1, 114, 255); box-sizing: border-box;">
-                    {{lead}}
-                  </span>
-                </strong>
-              </p>
-              <p style="white-space: normal; box-sizing: border-box;"><br /></p>
-              {% endfor %}
+          {% for lead in para.subs.leads %}
+          <p style="white-space: normal; box-sizing: border-box;">
+            <strong style="box-sizing: border-box;">
+              <span style="color: rgb(1, 114, 255); box-sizing: border-box;">
+                {{lead}}
+              </span>
+            </strong>
+          </p>
+          <p style="white-space: normal; box-sizing: border-box;"><br /></p>
+          {% endfor %}
 
-              {% for body in para.subs.body %}
-              <p style="white-space: normal; box-sizing: border-box;">
-                <span style="font-size: 15px; color: rgb(62, 62, 62); box-sizing: border-box;">
-                  {{body}}
-                </span>
-              </p>
-              <p style="white-space: normal; box-sizing: border-box;"><br /></p>
-              {% endfor %}
-            </section>
-          </section>
+          {% for body in para.subs.body %}
+          <p style="white-space: normal; box-sizing: border-box;">
+            <span style="color: rgb(62, 62, 62); box-sizing: border-box;">
+              {{body}}
+            </span>
+          </p>
+          <p style="white-space: normal; box-sizing: border-box;"><br /></p>
+          {% endfor %}
         </section>
-        <section style="margin: -90px 0% 10px; box-sizing: border-box;">
+        <section style="margin: -20px 0% 10px; box-sizing: border-box;">
           <section style="max-width: 100%; vertical-align: middle; display: inline-block; line-height: 0; width: 90%; height: auto; box-sizing: border-box;">
-            <section style="
-              vertical-align: middle;
-              max-width: 100%;
-              width: 100%;
-              background-image: url('{{para.img_src}}');
-              background-repeat: no-repeat;
-              background-size: 100%;
-              display: inline-block;
-              box-sizing: border-box;
-              ">
+            <section style="vertical-align: middle; max-width: 100%; width: 100%; background-image: url({{para.img_src}}); background-repeat: no-repeat; background-size: 100%; display: inline-block; box-sizing: border-box;">
               <img data-src="{{para.img_src}}"
                 data-type="png"
                 style="vertical-align: middle; opacity: 0; width: auto; box-sizing: border-box;"
@@ -196,19 +183,7 @@
             </section>
           </section>
         </section>
-        <section style="
-          transform: scale(0.9);
-          -webkit-transform: scale(0.9);
-          -moz-transform: scale(0.9);
-          -o-transform: scale(0.9);
-          transform-origin: center center;
-          -webkit-transform-origin: center center;
-          -moz-transform-origin: center center;
-          -o-transform-origin: center center;
-          margin-top: -18px;
-          margin-bottom: -18px;
-          box-sizing: border-box;
-          ">
+        <section style="transform: scale(0.9); -webkit-transform: scale(0.9); -moz-transform: scale(0.9); -o-transform: scale(0.9); transform-origin: center center; -webkit-transform-origin: center center; -moz-transform-origin: center center; -o-transform-origin: center center; margin-top: -18px; margin-bottom: -18px; box-sizing: border-box; ">
           <section style="margin-top: -50px; margin-right: 0%; margin-left: 0%; box-sizing: border-box;">
             <section style="text-align: justify; box-sizing: border-box;">
               <p style="white-space: normal; box-sizing: border-box;"><br style="box-sizing: border-box;" /></p>
@@ -229,27 +204,13 @@
     </section>
   </section>
   {% else %}
-  <section style="
-    transform: scale(0.9);
-    -webkit-transform: scale(0.9);
-    -moz-transform: scale(0.9);
-    -o-transform: scale(0.9);
-    transform-origin: center center;
-    -webkit-transform-origin: center center;
-    -moz-transform-origin: center center;
-    -o-transform-origin: center center;
-    margin-top: -22px;
-    margin-bottom: -22px;
-    box-sizing: border-box;
-    ">
-    <section style="font-size: 15px; color: rgb(62, 62, 62); box-sizing: border-box;">
-      {% for body in para.body %}
-      <p style="white-space: normal; box-sizing: border-box;">
-        {{body}}
-      </p>
-      <p style="white-space: normal; box-sizing: border-box;"><br /></p>
-      {% endfor %}
-    </section>
+  <section style="color: rgb(62, 62, 62); box-sizing: border-box; font-size: 85%; margin-left: 32px; margin-right: 32px; text-align: justify;">
+    {% for body in para.body %}
+    <p style="white-space: normal; box-sizing: border-box;">
+      {{body}}
+    </p>
+    <p style="white-space: normal; box-sizing: border-box;"><br /></p>
+    {% endfor %}
   </section>
 
   {% if para.img_src is not none %}

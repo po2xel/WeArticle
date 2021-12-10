@@ -56,11 +56,13 @@ class WeArticle:
     API_BASE_URL = 'https://api.weixin.qq.com/cgi-bin'
 
     def __init__(self, config):
-        self.access_token: str = '51_6VySlE4ID1alSWsSXFCZYi0_QRN-3LP41zjOxNiHtSgqwiFx3HKAVRoec94i-lW2YEpzSO4F5Bva-QXrq2ppORoiwvSUmLuJqV48F7IXTnJjODC1av27rgSaKDSrlf3NOe4BmvKJA6q7TW1JMCSeAIAHXN'
+        self.access_token: str = '51_fyQj_HmRMVqU_KbyehRhWZzTyNPMR9_ogYvUSyiQBq1Dt1uYjcdg1n_0ke-jFYwtCPagvG--mBEhFpjvgvpIJ2RcL0tebRz3zgNEcim0nit7rMWAMJJDgzwZbGBW2QIH0y4i36Q0Sk_oRPlDBAEeAEANMQ'
 
         self.title: str = config['title']
         self.author: str = config['author']
         self.digest = config['digest']
+        self.source_url = config['source_url']
+        self.thumb_media_id = self.upload_thumb(config['thumb'])
         self.paras: list[Paragraph] = []
 
     @staticmethod
@@ -80,12 +82,20 @@ class WeArticle:
     def upload_img(self, img_url: str):
         filename = WeArticle.cache_img(img_url)
 
-        with open(filename, 'rb') as file_obj:
-            resp = requests.post(f'{WeArticle.API_BASE_URL}/media/uploadimg?access_token={self.access_token}', files={'media': file_obj})
+        with open(filename, 'rb') as img:
+            resp = requests.post(f'{WeArticle.API_BASE_URL}/media/uploadimg?access_token={self.access_token}', files={'media': img})
             if resp.ok and not resp.json().get('errcode'):
                 return resp.json()['url']
             else:
                 logging.error(f'Failed to upload image {filename}.\nError: {resp.json()}')
+
+    def upload_thumb(self, filename: str):
+        with open(filename, 'rb') as img:
+            resp = requests.post(f'{WeArticle.API_BASE_URL}/material/add_material?access_token={self.access_token}&type=thumb', files={'media': img})
+            if resp.ok and not resp.json().get('errcode'):
+                return resp.json()['media_id']
+            else:
+                logging.error(f'Failed to upload thumbnail {filename}.\nError: {resp.json()}')
 
     def create_draft(self, content: str):
         payload = {'articles': [{'title': self.title, 'author': self.author, 'content': content, 'thumb_media_id': 'gQOp_H1dB3TUt_Jiz4f-mmjQG71d9QtLQO5oq6ZVv7w'}]}
@@ -101,14 +111,13 @@ class WeArticle:
             'media_id': media_id,
             'index': 0,
             'articles': {
-                'title': 'test',
+                'title': self.title,
                 'author': self.author,
                 'digest': self.digest,
                 'content': htmlmin.minify(content),
-                'content_source_url': '',
-                'thumb_media_id': 'gQOp_H1dB3TUt_Jiz4f-mmjQG71d9QtLQO5oq6ZVv7w',
+                'content_source_url': self.source_url,
+                'thumb_media_id': self.thumb_media_id,
                 'show_cover_pic': 0,
-                'thumb_url': '',
                 'need_open_comment': False,
                 'only_fans_can_comment': True
             }
