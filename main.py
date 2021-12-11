@@ -4,9 +4,9 @@ import logging
 from argparse import ArgumentParser
 from enum import Enum
 
+import htmlmin
 import requests
 import yaml
-import htmlmin
 from bs4 import BeautifulSoup, element
 from jinja2 import Template
 
@@ -18,6 +18,16 @@ class Type(Enum):
     image = 3
 
     empty = 0xFF
+
+
+class Material(Enum):
+    image = 'image'
+    voice = 'voice'
+    video = 'video'
+    thumb = 'thumb'
+
+    def __str__(self):
+        return self.value
 
 
 def tag_type(tag: element.Tag) -> Type:
@@ -56,14 +66,26 @@ class WeArticle:
     API_BASE_URL = 'https://api.weixin.qq.com/cgi-bin'
 
     def __init__(self, config):
-        self.access_token: str = '51_fyQj_HmRMVqU_KbyehRhWZzTyNPMR9_ogYvUSyiQBq1Dt1uYjcdg1n_0ke-jFYwtCPagvG--mBEhFpjvgvpIJ2RcL0tebRz3zgNEcim0nit7rMWAMJJDgzwZbGBW2QIH0y4i36Q0Sk_oRPlDBAEeAEANMQ'
+        self.access_token: str = '51_h0X53NRyVvyJmb-8TqJTE7cuHEJSN9KxFBob5n_bQljNcc5ZEnbi3vI_w4mLOPcb03cU9kl43_N4uwpmKBdOxevrdy4BxV-tOr9W4TLbLIqxJK1YGn0BOSECbhlzf8rbDXPjH52pdwwCf7AALOWgAIACFN'
 
         self.title: str = config['title']
         self.author: str = config['author']
         self.digest = config['digest']
         self.source_url = config['source_url']
         self.thumb_media_id = self.upload_thumb(config['thumb'])
+        self.show_cover_pic = config['show_cover_pic']
+        self.need_open_comment = config['need_open_comment']
+        self.only_fans_can_comment = config['only_fans_can_comment']
+
         self.paras: list[Paragraph] = []
+
+    def _upload_material(self, filename: str, material: Material):
+        with open(filename, 'rb') as img:
+            resp = requests.post(f'{WeArticle.API_BASE_URL}/material/add_material?access_token={self.access_token}&type={material}', files={'media': img})
+            if resp.ok and not resp.json().get('errcode'):
+                return resp.json()['media_id']
+            else:
+                logging.error(f'Failed to upload thumbnail {filename}.\nError: {resp.json()}')
 
     @staticmethod
     def cache_img(img_url: str) -> str:
@@ -72,8 +94,8 @@ class WeArticle:
         if resp.ok:
             filename = cgi.parse_header(resp.headers['content-disposition'])[1]['filename']
             filename = f'tmp/{filename}'
-            with open(filename, 'wb') as fobj:
-                fobj.write(resp.content)
+            with open(filename, 'wb') as img:
+                img.write(resp.content)
 
             return filename
         else:
@@ -90,19 +112,26 @@ class WeArticle:
                 logging.error(f'Failed to upload image {filename}.\nError: {resp.json()}')
 
     def upload_thumb(self, filename: str):
-        with open(filename, 'rb') as img:
-            resp = requests.post(f'{WeArticle.API_BASE_URL}/material/add_material?access_token={self.access_token}&type=thumb', files={'media': img})
-            if resp.ok and not resp.json().get('errcode'):
-                return resp.json()['media_id']
-            else:
-                logging.error(f'Failed to upload thumbnail {filename}.\nError: {resp.json()}')
+        return self._upload_material(filename, Material.image)
 
     def create_draft(self, content: str):
-        payload = {'articles': [{'title': self.title, 'author': self.author, 'content': content, 'thumb_media_id': 'gQOp_H1dB3TUt_Jiz4f-mmjQG71d9QtLQO5oq6ZVv7w'}]}
-        resp = requests.post(f'{WeArticle.API_BASE_URL}/draft/add?access_token={self.access_token}', data=payload)
+        payload = {
+            'articles': [{
+                'title': self.title,
+                'author': self.author,
+                'digest': self.digest,
+                'content': htmlmin.minify(content),
+                'content_source_url': self.source_url,
+                'thumb_media_id': self.thumb_media_id,
+                'show_cover_pic': self.show_cover_pic,
+                'need_open_comment': self.need_open_comment,
+                'only_fans_can_comment': self.only_fans_can_comment
+            }]
+        }
+        resp = requests.post(f'{WeArticle.API_BASE_URL}/draft/add?access_token={self.access_token}', data=json.dumps(payload, ensure_ascii=False).encode('utf-8'))
 
         if resp.ok and not resp.json().get('errcode'):
-            pass
+            return resp.json()['media_id']
         else:
             logging.error(f'Failed to post draft.\nError: {resp.json()}')
 
@@ -117,9 +146,9 @@ class WeArticle:
                 'content': htmlmin.minify(content),
                 'content_source_url': self.source_url,
                 'thumb_media_id': self.thumb_media_id,
-                'show_cover_pic': 0,
-                'need_open_comment': False,
-                'only_fans_can_comment': True
+                'show_cover_pic': self.show_cover_pic,
+                'need_open_comment': self.need_open_comment,
+                'only_fans_can_comment': self.only_fans_can_comment
             }
         }
 
@@ -171,14 +200,19 @@ class WeArticle:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('-l', '--link')
+    parser.add_argument('-l', '--link', help='Original article link.')
+    parser.add_argument('-d', '--draft', help='Wechat official account platform article draft link.')
     args = parser.parse_args()
 
     with open('config.yaml', 'r', encoding='utf-8') as fin:
         article = WeArticle(config=yaml.safe_load(fin))
         article.parse_doc(args.link)
         res = article.render()
-        article.update_draft('gQOp_H1dB3TUt_Jiz4f-mgKQ5khPhm8sAlqAGnEH8FY', res)
+
+        if args.draft:
+            article.update_draft(args.draft, res)  # 'gQOp_H1dB3TUt_Jiz4f-mgKQ5khPhm8sAlqAGnEH8FY'
+        else:
+            article.create_draft(res)
 
         with open('tmp/result.html', 'w', encoding='utf-8') as fout:
             fout.write(res)
