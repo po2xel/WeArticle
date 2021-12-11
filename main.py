@@ -66,7 +66,10 @@ class WeArticle:
     API_BASE_URL = 'https://api.weixin.qq.com/cgi-bin'
 
     def __init__(self, config):
-        self.access_token: str = '51_h0X53NRyVvyJmb-8TqJTE7cuHEJSN9KxFBob5n_bQljNcc5ZEnbi3vI_w4mLOPcb03cU9kl43_N4uwpmKBdOxevrdy4BxV-tOr9W4TLbLIqxJK1YGn0BOSECbhlzf8rbDXPjH52pdwwCf7AALOWgAIACFN'
+        self.appid = config['appid']
+        self.secret = config['secret']
+
+        self.access_token, _ = self._get_access_token()
 
         self.title: str = config['title']
         self.author: str = config['author']
@@ -78,6 +81,14 @@ class WeArticle:
         self.only_fans_can_comment = config['only_fans_can_comment']
 
         self.paras: list[Paragraph] = []
+
+    def _get_access_token(self):
+        resp = requests.get(f'{WeArticle.API_BASE_URL}/token?grant_type=client_credential&appid={self.appid}&secret={self.secret}')
+        if resp.ok and not resp.json().get('errcode'):
+            return resp.json()['access_token'], resp.json()['expires_in']
+        else:
+            logging.error(f'Failed to acquired access token.\nError: {resp.json()}')
+            raise PermissionError(resp.json())
 
     def _upload_material(self, filename: str, material: Material):
         with open(filename, 'rb') as img:
@@ -192,8 +203,8 @@ class WeArticle:
                 yaml.dump(self.paras, stream, allow_unicode=True)
 
     def render(self):
-        with open('template.html', encoding='utf-8') as fin:
-            template = Template(fin.read(), trim_blocks=True, lstrip_blocks=True)
+        with open('template.html', encoding='utf-8') as temp:
+            template = Template(temp.read(), trim_blocks=True, lstrip_blocks=True)
 
             return template.render(title=self.title, author=self.author, paras=self.paras)
 
