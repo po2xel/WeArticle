@@ -1,6 +1,7 @@
 import cgi
 import json
 import logging
+import re
 from argparse import ArgumentParser
 from enum import Enum
 
@@ -48,14 +49,14 @@ def tag_type(tag: element.Tag) -> Type:
 
 class Paragraph:
     def __init__(self):
-        self.leads: list[str] = []
+        self.lead: str = ''
         self.body: list[str] = []
         self.subs: Paragraph | None = None
         self.img_url: str | None = None
 
     @property
-    def lead(self):
-        return ','.join(self.leads)
+    def leads(self):
+        return re.split('[,，]', self.lead)
 
     @property
     def img_src(self):
@@ -186,11 +187,11 @@ class WeArticle:
                 case Type.lead:
                     self.paras.append(Paragraph())
                     para = self.paras[-1]
-                    para.leads.append(text)
+                    para.lead = text
                 case Type.sub_lead:
                     para.subs = Paragraph()
                     para = para.subs
-                    para.leads.append(text)
+                    para.lead = text
                 case Type.image if para:
                     para.img_url = self.upload_img(child.img['src'])
                 case Type.body if para:  # if not para.subs and para.lead:
