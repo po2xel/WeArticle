@@ -47,9 +47,37 @@ def tag_type(tag: element.Tag) -> Type:
     return Type.body
 
 
-class Paragraph:
+class Config(yaml.YAMLObject):
+    yaml_loader = yaml.SafeLoader
+    yaml_tag = '!Configurations'
+
+    class Draft(yaml.YAMLObject):
+        yaml_tag = '!Draft'
+        yaml_loader = yaml.SafeLoader
+
+        def __init__(self, title, author, digest, source_url, thumb, show_cover_pic, need_open_comment, only_fans_can_comment):
+            self.title = title
+            self.author = author
+            self.digest = digest
+            self.source_url = source_url
+            self.thumb = thumb
+            self.show_cover_pic = show_cover_pic
+            self.need_open_comment = need_open_comment
+            self.only_fans_can_comment = only_fans_can_comment
+
+    def __init__(self, appid, secret, draft):
+        self.appid = appid
+        self.secret = secret
+        self.draft = draft
+
+
+class Paragraph(yaml.YAMLObject):
+    yaml_tag = '!Paragraph'
+    yaml_loader = yaml.SafeLoader
+
     def __init__(self):
         self.lead: str = ''
+        self.theme: str = ''
         self.body: list[str] = []
         self.subs: Paragraph | None = None
         self.img_url: str | None = None
@@ -66,20 +94,20 @@ class Paragraph:
 class WeArticle:
     API_BASE_URL = 'https://api.weixin.qq.com/cgi-bin'
 
-    def __init__(self, config):
-        self.appid = config['appid']
-        self.secret = config['secret']
+    def __init__(self, config: Config):
+        self.appid = config.appid
+        self.secret = config.secret
 
         self.access_token, _ = self._get_access_token()
 
-        self.title: str = config['title']
-        self.author: str = config['author']
-        self.digest = config['digest']
-        self.source_url = config['source_url']
-        self.thumb_media_id = self.upload_thumb(config['thumb'])
-        self.show_cover_pic = config['show_cover_pic']
-        self.need_open_comment = config['need_open_comment']
-        self.only_fans_can_comment = config['only_fans_can_comment']
+        self.title: str = config.draft.title
+        self.author: str = config.draft.author
+        self.digest = config.draft.digest
+        self.source_url = config.draft.source_url
+        self.thumb_media_id = self.upload_thumb(config.draft.thumb)
+        self.show_cover_pic = config.draft.show_cover_pic
+        self.need_open_comment = config.draft.need_open_comment
+        self.only_fans_can_comment = config.draft.only_fans_can_comment
 
         self.paras: list[Paragraph] = []
 
@@ -171,6 +199,10 @@ class WeArticle:
         else:
             logging.error(f'Failed to post draft.\nError: {resp.json()}')
 
+    def load_structs(self, struct_file: str):
+        with open(struct_file, encoding='utf-8') as struct:
+            self.paras = yaml.safe_load(struct)
+
     def parse_doc(self, link: str, dump: bool = True):
         resp = requests.get(link, headers={'User-Agent': 'Mozilla/5.0', 'Referer': 'https://shimo.im/'})
         soup = BeautifulSoup(resp.content, 'lxml')
@@ -200,7 +232,7 @@ class WeArticle:
                 #     para.subs.body.append(text)
 
         if dump:
-            with open('tmp/paras.yaml', 'w', encoding='utf-8') as stream:
+            with open('tmp/structs.yaml', 'w', encoding='utf-8') as stream:
                 yaml.dump(self.paras, stream, allow_unicode=True)
 
     def render(self):
@@ -213,18 +245,29 @@ class WeArticle:
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-l', '--link', help='Original article link.')
+    parser.add_argument('-s', '--structs', help='Parsed document structure file.')
+    parser.add_argument('-c', '--content', help='Rendered rich media content file.')
     parser.add_argument('-d', '--draft', help='Wechat official account platform article draft link.')
     args = parser.parse_args()
 
     with open('config.yaml', 'r', encoding='utf-8') as fin:
         article = WeArticle(config=yaml.safe_load(fin))
-        article.parse_doc(args.link)
-        res = article.render()
+
+        if args.content:
+            with open(args.content, encoding='utf-8') as html:
+                res = html.read()
+        else:
+            if args.structs:
+                article.load_structs(args.structs)
+            else:
+                article.parse_doc(args.link)
+
+            res = article.render()
 
         if args.draft:
             article.update_draft(args.draft, res)  # 'gQOp_H1dB3TUt_Jiz4f-mgKQ5khPhm8sAlqAGnEH8FY'
         else:
             article.create_draft(res)
 
-        with open('tmp/result.html', 'w', encoding='utf-8') as fout:
+        with open('tmp/rich_media_content.html', 'w', encoding='utf-8') as fout:
             fout.write(res)
