@@ -32,16 +32,21 @@ class Material(Enum):
 
 
 def tag_type(tag: element.Tag) -> Type:
+    tag_type.HEADINGS = ('h1', 'h2', 'h3', 'h4', 'h5', 'h6')
+
     if tag.img:
         return Type.image
 
     if not tag.text:
         return Type.empty
 
-    if tag.name in ('h1', 'h2', 'h3', 'h4', 'h5', 'h6'):
-        return Type.lead
+    if tag.name in tag_type.HEADINGS:
+        if tag.name == 'h1' or not tag.find_previous_sibling(tag_type.HEADINGS[0: tag_type.HEADINGS.index(tag.name)]):
+            return Type.lead
+        else:
+            return Type.sub_lead
 
-    if tag.strong and tag.strong.next_sibling is None and tag.strong.previous_sibling is None:
+    if tag.strong and not (tag.strong.next_sibling or tag.strong.previous_sibling):
         return Type.sub_lead
 
     return Type.body
@@ -79,7 +84,7 @@ class Paragraph(yaml.YAMLObject):
         self.lead: str = ''
         self.theme: str = ''
         self.body: list[str] = []
-        self.subs: Paragraph | None = None
+        self.subs: list[Paragraph] = []
         self.img_url: str | None = None
 
     @property
@@ -88,7 +93,7 @@ class Paragraph(yaml.YAMLObject):
 
     @property
     def img_src(self):
-        return self.subs.img_url if self.subs else self.img_url
+        return self.img_url
 
 
 class WeArticle:
@@ -168,6 +173,7 @@ class WeArticle:
                 'only_fans_can_comment': self.only_fans_can_comment
             }]
         }
+
         resp = requests.post(f'{WeArticle.API_BASE_URL}/draft/add?access_token={self.access_token}', data=json.dumps(payload, ensure_ascii=False).encode('utf-8'))
 
         if resp.ok and not resp.json().get('errcode'):
@@ -209,6 +215,8 @@ class WeArticle:
         editor = soup.find('div', class_='ql-editor')
 
         para: Paragraph | None = None
+        parent: Paragraph | None = None
+        sub_paras: list[Paragraph] | None = None
 
         for child in editor.children:
             tag = tag_type(child)
@@ -217,15 +225,17 @@ class WeArticle:
 
             match tag:
                 case Type.lead:
-                    self.paras.append(Paragraph())
-                    para = self.paras[-1]
+                    parent = Paragraph()
+                    self.paras.append(parent)
+                    para = parent
+                    sub_paras = para.subs
                     para.lead = text
                 case Type.sub_lead:
-                    para.subs = Paragraph()
-                    para = para.subs
+                    para = Paragraph()
+                    sub_paras.append(para)
                     para.lead = text
                 case Type.image if para:
-                    para.img_url = self.upload_img(child.img['src'])
+                    parent.img_url = self.upload_img(child.img['src'])
                 case Type.body if para:  # if not para.subs and para.lead:
                     para.body.append(text)
                 # case Type.body if para.subs and para.subs.lead:
@@ -247,7 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--link', help='Original article link.')
     parser.add_argument('-s', '--structs', help='Parsed document structure file.')
     parser.add_argument('-c', '--content', help='Rendered rich media content file.')
-    parser.add_argument('-d', '--draft', help='Wechat official account platform article draft link.')
+    parser.add_argument('-d', '--draft', help='Wechat official account platform article draft media id.')
     args = parser.parse_args()
 
     with open('config.yaml', 'r', encoding='utf-8') as fin:

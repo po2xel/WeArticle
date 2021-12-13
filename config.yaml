@@ -4,12 +4,12 @@ secret:  # 微信公众号第三方用户唯一凭证密钥，即appsecret
 
 draft:
   !Draft
-  title: 每周芯闻社 | 智路资本收购日月光大陆封测工厂  #标题
+  title: 每周芯闻社 | 紫光将由智路建广联合接盘，阿里出局  #标题
   author: NICIC  #作者
   digest: 为您提供每周最新最重要得芯片资讯 #摘要。默认抓取正文前54个字
   source_url: #图文消息的原文地址，即点击“阅读原文”后的URL
   thumb: tmp/thumb.png #图文消息的封面图片素材
-  show_cover_pic: False #是否显示封面, True/False，即显示(默认)
+  show_cover_pic: 0 #是否显示封面, True/False，即显示(默认)
   need_open_comment: 0 #是否打开评论，False不打开(默认)，True打开
   only_fans_can_comment: 0 #是否粉丝才可评论，False所有人可评论(默认)，True粉丝才可评论
 

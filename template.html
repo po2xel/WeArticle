@@ -139,7 +139,7 @@
     <p style="white-space: normal; box-sizing: border-box;"><br style="box-sizing: border-box;" /></p>
   </section>
 
-  {% if para.subs is not none %}
+  {% if para.subs|length > 0 %}
   <section style="text-align: center; width: 100%; box-sizing: border-box;">
     <section style="display: inline-block; width: 100%; height: 370px; vertical-align: top; overflow-y: auto; box-sizing: border-box; padding-left: 5%; padding-right: 5%;">
       <section style="overflow-x: visible; box-sizing: border-box;">
@@ -153,24 +153,24 @@
           <p style="white-space: normal; box-sizing: border-box;"><br /></p>
           {% endfor %}
 
-          {% for lead in para.subs.leads %}
+          {% for sub in para.subs %}
           <p style="white-space: normal; box-sizing: border-box;">
             <strong style="box-sizing: border-box;">
               <span style="color: rgb(1, 114, 255); box-sizing: border-box;">
-                {{lead}}
+                {{sub.lead}}
               </span>
             </strong>
           </p>
           <p style="white-space: normal; box-sizing: border-box;"><br /></p>
-          {% endfor %}
 
-          {% for body in para.subs.body %}
+          {% for body in sub.body %}
           <p style="white-space: normal; box-sizing: border-box;">
             <span style="color: rgb(62, 62, 62); box-sizing: border-box;">
               {{body}}
             </span>
           </p>
           <p style="white-space: normal; box-sizing: border-box;"><br /></p>
+          {% endfor %}
           {% endfor %}
         </section>
         <section style="margin: 10px 0% 10px; box-sizing: border-box;">
