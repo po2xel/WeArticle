@@ -277,7 +277,7 @@ if __name__ == '__main__':
         if args.draft:
             article.update_draft(args.draft, res)  # 'gQOp_H1dB3TUt_Jiz4f-mgKQ5khPhm8sAlqAGnEH8FY'
         else:
-            article.create_draft(res)
+            print('media_id: ', article.create_draft(res))
 
         with open('tmp/rich_media_content.html', 'w', encoding='utf-8') as fout:
             fout.write(res)
