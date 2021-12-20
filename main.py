@@ -53,8 +53,8 @@ def tag_type(tag: element.Tag) -> Type:
 
 
 class Config(yaml.YAMLObject):
-    yaml_loader = yaml.SafeLoader
     yaml_tag = '!Configurations'
+    yaml_loader = yaml.SafeLoader
 
     class Draft(yaml.YAMLObject):
         yaml_tag = '!Draft'
