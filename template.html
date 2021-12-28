@@ -170,8 +170,22 @@
           </p>
           <p style="white-space: normal; box-sizing: border-box;"><br /></p>
           {% endfor %}
+          {% if sub.img_src is not none %}
+          <section style="margin: 10px 0% 10px; box-sizing: border-box;">
+            <section style="max-width: 100%; vertical-align: middle; display: inline-block; line-height: 0; height: auto; box-sizing: border-box;">
+              <section style="vertical-align: middle; max-width: 100%; width: 100%; background-image: url({{sub.img_src}}); background-repeat: no-repeat; background-size: 100%; display: inline-block; box-sizing: border-box;">
+                <img data-src="{{sub.img_src}}"
+                  data-type="png"
+                  style="vertical-align: middle; opacity: 0; width: auto; box-sizing: border-box;"
+                  data-ratio="0.37037037037037035" data-w="1080" />
+                <p style="white-space: normal; box-sizing: border-box;"><br /></p>
+              </section>
+            </section>
+          </section>
+          {% endif %}
           {% endfor %}
         </section>
+        {% if para.img_src is not none %}
         <section style="margin: 10px 0% 10px; box-sizing: border-box;">
           <section style="max-width: 100%; vertical-align: middle; display: inline-block; line-height: 0; height: auto; box-sizing: border-box;">
             <section style="vertical-align: middle; max-width: 100%; width: 100%; background-image: url({{para.img_src}}); background-repeat: no-repeat; background-size: 100%; display: inline-block; box-sizing: border-box;">
@@ -189,6 +203,7 @@
             </section>
           </section>
         </section>
+        {% endif %}
         <section style="text-align: justify; box-sizing: border-box;">
           <p style="white-space: normal; box-sizing: border-box;"><br style="box-sizing: border-box;" /></p>
         </section>

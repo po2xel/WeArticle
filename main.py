@@ -219,11 +219,10 @@ class WeArticle:
         sub_paras: list[Paragraph] | None = None
 
         for child in editor.children:
-            tag = tag_type(child)
             text = child.text
             # print(text)
 
-            match tag:
+            match tag := tag_type(child):
                 case Type.lead:
                     parent = Paragraph()
                     self.paras.append(parent)
@@ -235,7 +234,7 @@ class WeArticle:
                     sub_paras.append(para)
                     para.lead = text
                 case Type.image if para:
-                    parent.img_url = self.upload_img(child.img['src'])
+                    para.img_url = self.upload_img(child.img['src'])
                 case Type.body if para:  # if not para.subs and para.lead:
                     para.body.append(text)
                 # case Type.body if para.subs and para.subs.lead:
