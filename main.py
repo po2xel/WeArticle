@@ -219,7 +219,7 @@ class WeArticle:
         sub_paras: list[Paragraph] | None = None
 
         for child in editor.children:
-            text = child.text
+            text = child.text.strip()
             # print(text)
 
             match tag := tag_type(child):
